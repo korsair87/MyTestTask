@@ -7,6 +7,8 @@ import pages.RandomOrg.DiceOneRoller;
 import pages.RandomOrg.DiceTwoRoller;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.IntStream;
 
 import static org.testng.Assert.assertTrue;
@@ -28,7 +30,9 @@ public class TestDiceRoller {
         pageFactory.goToRandomOrgDiceRoller(1);
         ArrayList<Integer> listOfDiceNumber = new ArrayList<>();
         getListOfDiceNumber(listOfDiceNumber, 1000);
-        assertTrue(getStandardDeviation(listOfDiceNumber) <= 2.7);
+        System.out.println();
+        System.out.println("Maximum Deviation in percent is: " + getMaxDeviation(listOfDiceNumber));
+        assertTrue(getMaxDeviation(listOfDiceNumber) <= 0.05);
     }
 
     @Test
@@ -36,8 +40,9 @@ public class TestDiceRoller {
         pageFactory.goToRandomOrgDiceRoller(2);
         ArrayList<Integer> listOfDiceNumber = new ArrayList<>();
         getListForTwoDiceNumber(listOfDiceNumber, 1000);
-        System.out.println(getStandardDeviation(listOfDiceNumber));
-        assertTrue(getStandardDeviation(listOfDiceNumber) <= 5.4);
+        System.out.println();
+        System.out.println("Maximum Deviation in percent is: " + getMaxDeviation(listOfDiceNumber));
+        assertTrue(getMaxDeviation(listOfDiceNumber) <= 0.05);
     }
 
     private void getListOfDiceNumber(ArrayList<Integer> listOfNumbers, int count) {
@@ -47,7 +52,7 @@ public class TestDiceRoller {
                 .forEachOrdered(listOfNumbers::add);
         listOfNumbers.stream()
                 .map(listOfNumber -> listOfNumber + ", ")
-                .forEachOrdered(e -> LOG.info(e));
+                .forEachOrdered(System.out::print);
     }
 
     private void getListForTwoDiceNumber(ArrayList<Integer> listOfNumbers, int count) {
@@ -60,16 +65,14 @@ public class TestDiceRoller {
                 .forEachOrdered(System.out::print);
     }
 
-    private double getStandardDeviation(ArrayList<Integer> listOfNumbers) {
-        double sum = 0.0, standardDeviation = 0.0;
-        int length = listOfNumbers.size();
+    private double getMaxDeviation(ArrayList<Integer> listOfNumbers) {
+        Integer sum = listOfNumbers.stream()
+                .reduce(0, Integer::sum);
+        double mean = sum / listOfNumbers.size();
+        List deviation = new ArrayList<>();
         for (double num : listOfNumbers) {
-            sum += num;
+            deviation.add(Math.abs(mean - num));
         }
-        double mean = sum / length;
-        for (double num : listOfNumbers) {
-            standardDeviation += Math.pow(num - mean, 2);
-        }
-        return Math.sqrt(standardDeviation / length);
+        return mean/100* (double) Collections.max(deviation);
     }
 }
